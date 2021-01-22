@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29519.181
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Milosevic_AsyncServer", "Milosevic_AsyncServer\Milosevic_AsyncServer.csproj", "{81995E5B-4EB8-4B6D-B1AE-57FA8A0DA7F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncSocketLib", "AsyncSocketLib\AsyncSocketLib.csproj", "{AD707200-1403-4765-B85B-0CF7A4B6DB9E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81995E5B-4EB8-4B6D-B1AE-57FA8A0DA7F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81995E5B-4EB8-4B6D-B1AE-57FA8A0DA7F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81995E5B-4EB8-4B6D-B1AE-57FA8A0DA7F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81995E5B-4EB8-4B6D-B1AE-57FA8A0DA7F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD707200-1403-4765-B85B-0CF7A4B6DB9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD707200-1403-4765-B85B-0CF7A4B6DB9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD707200-1403-4765-B85B-0CF7A4B6DB9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD707200-1403-4765-B85B-0CF7A4B6DB9E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D384216-8D9B-4502-B94B-BE95D068F0ED}
+	EndGlobalSection
+EndGlobal
