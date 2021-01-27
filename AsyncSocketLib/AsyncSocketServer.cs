@@ -1,134 +1,227 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.IO;
+using System.Windows.Threading;
 
 namespace AsyncSocketLib
 {
     public class AsyncSocketServer
     {
-        IPAddress mIP;
-        int mPort;
-        TcpListener mServer;
-        List<TcpClient> mClients;
+		IPAddress mIP;
+		int mPort;
+		TcpListener mServer;
+		List<TcpClient> mClients;
 
-        public AsyncSocketServer()
-        {
-            mClients = new List<TcpClient>();
-        }
 
-        //Server inizia as ascoltare
-        public async void InAscolto(IPAddress ipaddr = null, int port = 23000)
-        {
-            //controlli generali
-            if (ipaddr == null)
-            {
-                ipaddr = IPAddress.Any;
-            }
+		public AsyncSocketServer()
+		{
+			mClients = new List<TcpClient>();
+		}
 
-            if (port < 0 || port > 65535)
-            {
-                port = 23000;
-            }
+		public async void In_Ascolto(IPAddress ipaddr = null, int port = 23000)
+		{
+			if (ipaddr == null)
+			{
+				ipaddr = IPAddress.Any;
+			}
 
-            mIP = ipaddr;
-            mPort = port;
+			if (port < 0 || port > 65535)
+			{
+				port = 23000;
+			}
 
-            mServer = new TcpListener(mIP, mPort);
+			mIP = ipaddr;
+			mPort = port;
 
-            Debug.WriteLine("Server in ascolto su IP: {0} - Porta: {1}", mIP.ToString(), mPort.ToString());
+			mServer = new TcpListener(mIP, mPort);
+			Debug.WriteLine("Server in ascolto su IP: {0} - Porta: {1}", mIP.ToString(), mPort.ToString());
 
-            mServer.Start();
+			mServer.Start();
 
-            Debug.WriteLine("Server avviato.");
+			Debug.WriteLine("Server avviato!");
 
-            while (true)
-            {
-                TcpClient client = await mServer.AcceptTcpClientAsync();
-                mClients.Add(client);
-                Debug.WriteLine("Client connessi: {0}. Client connesso: {1}", mClients.Count, client.Client.RemoteEndPoint);
-                RiceviMessaggio(client);
-            }
-        }
 
-        public async void RiceviMessaggio(TcpClient client)
-        {
-            NetworkStream stream = null;
-            StreamReader reader = null;
+			DateTime oggi = DateTime.Now;
+			byte[] buff = new byte[128];
+			string bot = "ChatBot :  Benvenuto client\n\r\n\r" +
+						 "ChatBot : Se ti server aiuta basta inviare \n\r" +
+						 "#CMD  ( Per vederi tutti i commandi )\n\r\n \r" +
+						 oggi.ToString() + "\n\r";
+			buff = Encoding.ASCII.GetBytes(bot);
 
-            try
-            {
-                stream = client.GetStream();
-                reader = new StreamReader(stream);
-                char[] buff = new char[512];
-                int nBytes = 0;
+			while (true)
+			{
 
-                while (true)
-                {
-                    Debug.WriteLine("In attesa di un messaggio");
-                    //ricezione messaggio asincrono
-                    nBytes = await reader.ReadAsync(buff, 0, buff.Length);
+				TcpClient client = await mServer.AcceptTcpClientAsync();
+				buff = Encoding.ASCII.GetBytes(bot);
+				await client.GetStream().WriteAsync(buff, 0, buff.Length);
+				mClients.Add(client);
 
-                    if (nBytes == 0)
-                    {
-                        Debug.WriteLine("Client Disconnesso");
-                        break;
-                    }
-                    string recvText = new string(buff);
-                    Debug.WriteLine("N° byte: {0}. Messaggio: {1}", nBytes, recvText);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Errore: " + ex.Message);
-            }
-        }
+				Debug.WriteLine("Client connessi: {0}. Client attualmente connesso: {1}", mClients.Count, client.Client.RemoteEndPoint);
+				RiceviMessaggio(client);
 
-        private void RimuoviClient(TcpClient client)
-        {
-            if (mClients.Contains(client))
-            {
-                mClients.Remove(client);
-            }
-        }
 
-        public void InviaTutti(string messaggio)
-        {
-            try
-            {
-                foreach (TcpClient client in mClients)
-                {
-                    byte[] buff = Encoding.ASCII.GetBytes(messaggio);
-                    client.GetStream().WriteAsync(buff, 0, buff.Length);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Errore: " + ex.Message);
-            }
-        }
+			}
+		}
 
-        public void Disconnetti()
-        {
-            try
-            {
-                foreach (TcpClient client in mClients)
-                {
-                    client.Close();
-                    RimuoviClient(client);
-                }
-                mServer.Stop();
-                mServer = null;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Errore: " + ex.Message);
-            }
-        }
-    }
+		public async void RiceviMessaggio(TcpClient client)
+		{
+
+			NetworkStream stream = null;
+			StreamReader reader = null;
+
+			try
+			{
+				stream = client.GetStream();
+				reader = new StreamReader(stream);
+				char[] buff = new char[512];
+				int nBytes = 0;
+				DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+				dispatcherTimer.Tick += new EventHandler(Inviaognisec);
+				dispatcherTimer.Interval = new TimeSpan(0, 0, 10);
+				dispatcherTimer.Start();
+				int c = 0;
+				while (true)
+				{
+					Debug.WriteLine("In attesa di un messaggio");
+
+					nBytes = await reader.ReadAsync(buff, 0, buff.Length);
+					if (nBytes == 0)
+					{
+						Debug.WriteLine("Client Disconnesso!");
+						break;
+					}
+					if (c == 1)
+					{
+						c = 0;
+					}
+					else if (nBytes != 0 && c == 0)
+					{
+						string recvText = new string(buff);
+						Debug.WriteLine("N° byte: {0};\nMessaggio: {1}", nBytes, recvText);
+						c = InviaATutti(buff, client);
+					}
+					Array.Clear(buff, 0, buff.Length);
+				}
+			}
+			catch (Exception ex)
+			{
+
+				Debug.WriteLine("Errore: " + ex.Message);
+			}
+		}
+
+		public void RimuoviClient(TcpClient client)
+		{
+			if (mClients.Contains(client))
+			{
+				mClients.Remove(client);
+			}
+		}
+
+		private void Inviaognisec(object sender, EventArgs e)
+		{
+			try
+			{
+				foreach (TcpClient client in mClients)
+				{
+					DateTime oggi = DateTime.Now;
+					byte[] buff = Encoding.ASCII.GetBytes("\r\n" + oggi.ToString() + " \r\n");
+					client.GetStream().WriteAsync(buff, 0, buff.Length);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine(ex);
+			}
+		}
+
+		public int InviaATutti(char[] messagge, TcpClient client)
+		{
+			StringBuilder construtore = new StringBuilder();
+			bool flags = false;
+			int conut = 1;
+			try
+			{
+
+				foreach (char c in messagge)
+				{
+					if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
+					{
+						construtore.Append(c);
+					}
+				}
+
+				if (construtore.ToString() == "time" || construtore.ToString() == "data")
+				{
+					DateTime oggi = DateTime.Now;
+					byte[] buff = Encoding.ASCII.GetBytes(oggi.ToString() + " \r\n");
+					client.GetStream().WriteAsync(buff, 0, buff.Length);
+					flags = true;
+				}
+
+				if (construtore.ToString() == "cmd")
+				{
+					byte[] buff = Encoding.ASCII.GetBytes("ChatBot: Posso rispondere solo alle seguenti domande \n\r" +
+								  "#Time \n\r" +
+								  "#Data\n\r" +
+								  "ChatBot: Buon divertimento \n\r");
+					client.GetStream().WriteAsync(buff, 0, buff.Length);
+					flags = true;
+				}
+
+				if (flags == false)
+				{
+					byte[] buff = Encoding.ASCII.GetBytes("Non ho capito \n\r");
+					client.GetStream().WriteAsync(buff, 0, buff.Length);
+					flags = true;
+				}
+				return conut;
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine("Errore: " + ex.Message);
+				return conut;
+			}
+		}
+
+		public void Dissconetti()
+		{
+			try
+			{
+				foreach (TcpClient client in mClients)
+				{
+					client.Close();
+					RimuoviClient(client);
+				}
+				mServer.Stop();
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine("Errore: " + ex.Message);
+			}
+		}
+
+		public void InviaATuttiClient(string messagge)
+		{
+			try
+			{
+				foreach (TcpClient client in mClients)
+				{
+					byte[] buff = Encoding.ASCII.GetBytes(messagge);
+					client.GetStream().WriteAsync(buff, 0, buff.Length);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.WriteLine("Errore: " + ex.Message);
+			}
+
+		}
+
+	}
 }
